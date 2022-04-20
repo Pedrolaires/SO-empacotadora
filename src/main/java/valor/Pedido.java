@@ -3,7 +3,7 @@ package valor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Pedido {
+public class Pedido implements Comparable<Pedido> {
 	private List<Produto> produtos;
 	private String cliente;
 	private int totalDeProdutos;
@@ -22,6 +22,21 @@ public class Pedido {
 		this.cliente = cliente;
 		this.totalDeProdutos = totalDeProdutos;
 		this.prazoEmpacotamento = prazoEmpacotamento;
+	}
+	
+	public int compareTo(Pedido o) {
+		if(o.getPrazoEmpacotamento() > this.getPrazoEmpacotamento()) {
+			if(this.haPrazo()) {
+				return -1;
+			}
+			return 1;
+		}else if(o.getPrazoEmpacotamento() < this.getPrazoEmpacotamento()) {
+			if(o.haPrazo()) {
+				return 1;
+			}
+		return -1;
+		}
+		return 0;
 	}
 
 	public List<Produto> getProdutos() {
@@ -60,6 +75,10 @@ public class Pedido {
 		if(this.prazoEmpacotamento == 0) 
 			return false;
 		return true;
+	}
+	
+	public int paraInteiro(String string) {		
+		return Integer.parseInt(string);
 	}
 	
 }

@@ -9,6 +9,10 @@ public class Produto {
 		this.volume = volume;
 		this.empacotado = false;
 	}
+	
+	public Produto (){
+		this.volume = 250.0;
+	}
 
 	public double getVolume() {
 		return volume;
