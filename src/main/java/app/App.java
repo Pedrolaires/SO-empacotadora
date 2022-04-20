@@ -9,48 +9,19 @@ import valor.Produto;
 
 public class App {
 public static void main(String[] args) {
-		
-		int tam = 0;	
-		
 		String enderecoArq = "./BaseDeDados/dados_tp01.txt";
 		
-		//declaro novos objetos para poder ler o arquivo texto
+		ArquivoTextoLeitura arquivoEntrada = new ArquivoTextoLeitura(enderecoArq); 
 		
-		ArquivoTextoLeitura arquivoEntrada = new ArquivoTextoLeitura
-				(enderecoArq); 
-									//***USAR o arq certo!
-		
-		String leituraArquivo = arquivoEntrada.lerBuffer();
-		
-		//excluo a primera linha
-		
-		leituraArquivo = arquivoEntrada.lerBuffer();		
-		while(leituraArquivo!=null) {
-			tam++;
-			
-			//leio cada uma das linhas e vou contando o tamanho
-			
-			leituraArquivo = arquivoEntrada.lerBuffer();
-		}
-		
-		arquivoEntrada.fecharArquivo();	
-		arquivoEntrada = new ArquivoTextoLeitura
-				(enderecoArq); 
-								//***USAR o arq certo!
-		
-		
-		//leio o cabeçalho para descartar
-		
-		String leitura = arquivoEntrada.lerBuffer();	
+		int tam = Integer.parseInt(arquivoEntrada.lerBuffer());	
 
 		Queue<Pedido> pedidos = new PriorityQueue<Pedido>();
+		
 		for (int i = 0; i < tam; i++) {		
 			
 			List<Produto> listaProdutos = new ArrayList<>();	
 			
-			//leio a linha e faço a separação da string em substrings
-			
-			leitura = arquivoEntrada.lerBuffer();
+			String leitura = arquivoEntrada.lerBuffer();
 			String[] intermediario = leitura.split(";");
 			
 			for(int k = 0; k<Integer.parseInt(intermediario[1]);k++) {
@@ -67,5 +38,5 @@ public static void main(String[] args) {
 			Pedido p = pedidos.remove();
 			System.out.println(p.getCliente() + " " + p.getPrazoEmpacotamento());
 		}
-}
+	}
 }
