@@ -4,7 +4,7 @@ public class Esteira {
 	private static final double VOLUME_LIMITE = 5000;
 	private int qtdProdutos;
 	
-	Esteira(int qtdProdutos){
+	public Esteira(int qtdProdutos){
 		this.qtdProdutos = qtdProdutos;
 	}
 	
