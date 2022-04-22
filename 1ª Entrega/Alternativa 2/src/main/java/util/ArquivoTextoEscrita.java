@@ -1,17 +1,20 @@
 package util;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 public class ArquivoTextoEscrita {
 
-	private BufferedWriter saida;
+	private OutputStreamWriter saida;
 	
 	public ArquivoTextoEscrita() {}
 		
 	public void abrirArquivo(String nomeArquivo){	
 		
 		try {
-			saida = new BufferedWriter(new FileWriter(nomeArquivo));
+			saida = new OutputStreamWriter(new FileOutputStream(nomeArquivo),"UTF-8");
 		}
 		catch (FileNotFoundException excecao) {
 			System.out.println("Arquivo não encontrado");
@@ -34,7 +37,7 @@ public class ArquivoTextoEscrita {
 	public void escrever(String textoEntrada) {
 		try {
 			saida.append(textoEntrada);
-			saida.newLine();
+			saida.append("\n");
 		}
 		catch (IOException excecao){
 			System.out.println("Erro de entrada/saída " + excecao);

@@ -31,6 +31,9 @@ public class Pedido implements Comparable<Pedido> {
 		this.pacotes = new ArrayList<Pacote>();
 	}
 
+	public Pedido() {
+	}
+
 	public List<Pacote> getPacotes() {
 		return pacotes;
 	}

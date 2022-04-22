@@ -69,4 +69,9 @@ public class MyTimer {
   public double getSegundo() {
     return segundo;
   }
+
+public double toSegundos(int hora, int minuto, double segundo) {
+	int total = (int) (hora*60*60 + minuto*60 + segundo);
+	return total;
+}
 }

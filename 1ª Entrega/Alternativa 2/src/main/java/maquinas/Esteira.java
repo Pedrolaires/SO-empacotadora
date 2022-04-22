@@ -7,13 +7,16 @@ import valor.Produto;
 public class Esteira {
 	private static final double VOLUME_LIMITE = 5000;
 	private List<Produto> produtos;
+	private String nome;
 
-	public Esteira(List<Produto> produtos) {
+	public Esteira(String nome,List<Produto> produtos) {
+		this.setNome(nome);
 		this.produtos = new ArrayList<Produto>();
 		this.produtos = produtos;
 	}
 
-	public Esteira() {
+	public Esteira(String nome) {
+		this.setNome(nome);
 		this.produtos = new ArrayList<Produto>();
 	}
 
@@ -37,5 +40,13 @@ public class Esteira {
 
 	public void setprodutos(List produtos) {
 		this.produtos = produtos;
+	}
+
+	public String getNome() {
+		return nome;
+	}
+
+	public void setNome(String nome) {
+		this.nome = nome;
 	}
 }

@@ -17,23 +17,37 @@ import valor.Produto;
 public class App {
 	
 	static MyTimer timer = new MyTimer(8,0,0);
-	static double tempoMedioPorPedido;
+	static double tempoTransicao = 0.5;
+	static double tempoProducaoPacote = 5;
+	static double tempoMedioPedido;
+	static int totalDePacotes = 0;
 	static ArquivoTextoEscrita logPedidos = new ArquivoTextoEscrita();
 	static ArquivoTextoEscrita logResumidoPedidos = new ArquivoTextoEscrita();
+	static ArquivoTextoEscrita log12horas = new ArquivoTextoEscrita();
+	static ArquivoTextoEscrita logEsteiras = new ArquivoTextoEscrita();
+	static ArquivoTextoEscrita relatorioFinal = new ArquivoTextoEscrita();
 	static int qtdPedidosFeitos;
+	static int qtdPedidosFeitosAte12h = 0;
+	
 
 	public static void main(String[] args) {
 		
 		Queue<Pedido> pedidos = new PriorityQueue<Pedido>();
 		BracoMecanico bracoMecanico = new BracoMecanico();
-		Esteira esteira = new Esteira();
+		Esteira esteira = new Esteira("Esteira 1");
 		
 		criarPedidos(pedidos);
-		logPedidos.abrirArquivo("logPedidos.txt");
-		logResumidoPedidos.abrirArquivo("logResumidoPedidos.txt");
+		logPedidos.abrirArquivo("./Relatorios/logPedidos.md");
+		logResumidoPedidos.abrirArquivo("./Relatorios/logResumidoPedidos.md");
+		log12horas.abrirArquivo("./Relatorios/log12horas.md");
+		logEsteiras.abrirArquivo("./Relatorios/logEsteiras.md");
+		relatorioFinal.abrirArquivo("./Relatorios/relatorioFinal.md");
 		iniciarProcesso(bracoMecanico, esteira, pedidos);
+		logEsteiras.fecharArquivo();
 		logResumidoPedidos.fecharArquivo();
 		logPedidos.fecharArquivo();
+		log12horas.fecharArquivo();
+		relatorioFinal.fecharArquivo();
 	}
 	
 	/**
@@ -43,8 +57,11 @@ public class App {
 	 * @param pedidos
 	 */
 	private static void iniciarProcesso(BracoMecanico bracoMecanico, Esteira esteira, Queue<Pedido> pedidos) {
+		int volumeComportadoNoPacote = 5000;
+		
 		while(pedidos.size() > 0 || timer.getHora() == 17) {
 			Pedido p = pedidos.remove();
+			int qtdProdutos = (int) (volumeComportadoNoPacote  / p.getProdutos().get(0).getVolume());
 			
 			esteira.setprodutos(p.getProdutos());
 			
@@ -52,20 +69,29 @@ public class App {
 				Pacote pkg = new Pacote();
 				
 				//a esteira rola os 20 produtos necessários para encher o pacote.
-				for(int i = 0; i < 20; i++) {
-					pkg.inserirProduto(bracoMecanico.empacotarProduto(esteira.rolarProdutos()));
+				for(int i = 0; i < qtdProdutos; i++) {
+					Produto produto = esteira.rolarProdutos();
+					pkg.inserirProduto(bracoMecanico.empacotarProduto(produto));
+					criarLogEsteira(esteira,produto, p);
 					if(pkg.estaCheio()) {
-						timer.incrementaSegundo(5);
+						timer.incrementaSegundo(tempoProducaoPacote);
 						transicao(bracoMecanico, esteira, p);
 						p.setPacote(pkg);
+						totalDePacotes +=1;
 						i = 21;
 					}
 				}
 			}
+			tempoMedioPedido += p.getPacotes().size()*tempoProducaoPacote + p.getPacotes().size()*tempoTransicao;
 			qtdPedidosFeitos++;
+			if(timer.getHora() < 12)
+				criarRelatorio12h(p);
+
 			criarLogPedidos(p);
 			criarLogResumidoPedidos(p);
 		}
+		tempoMedioPedido = tempoMedioPedido/qtdPedidosFeitos;
+		gerarRelatorioFinal();
 		
 	}			
 	
@@ -77,21 +103,51 @@ public class App {
 	 */
 	private static void transicao(BracoMecanico braco, Esteira esteira, Pedido p) {
 		braco.removerPacote(p);
-		timer.incrementaSegundo(0.5);
+		timer.incrementaSegundo(tempoTransicao);
 	}
 	
-	/* private static void criarRelatorio12h(Queue<Pedido> pedidosAte12h) {
+	/**
+	 * Cria um log na pasta de relatorios com base na passagem de produtos pela esteira
+	 * @param esteira
+	 * @param produto
+	 * @param p
+	 */
+	private static void criarLogEsteira(Esteira esteira, Produto produto, Pedido p) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg] "+ esteira.getNome() +": Produto: " + produto.getIndice() +
+				" do cliente: *" + p.getCliente() + "* rolou!");
+		logEsteiras.escrever(sb.toString());
+	}
+	
+	/**
+	 * Relatorio final
+	 */
+	private static void gerarRelatorioFinal() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("# Relatório final de uma rotina de trabalho se iniciando às 08:00 e com término às 17:00\n"
+				+ "## Dados coletados através de simulações computacionais!\n"
+				+ "### Utilizamos uma fila de prioridade para priorizar os pedidos com prazo mais curto"
+				+ "\n____________________________________________________________________________________\n\n"
+				+ "Tempo médio na realização de cada pedido: " + tempoMedioPedido/60 + "min\n"
+				+ "Pedidos finalizados até as 12horas: " + qtdPedidosFeitosAte12h);
+		
+		relatorioFinal.escrever(sb.toString());
+	}
+	
+	/**
+	 * Cria o relatório de pedidos concluídos até o meio dia
+	 * @param p
+	 */
+	 private static void criarRelatorio12h(Pedido p) {
 		StringBuilder sb = new StringBuilder();
 		
-		while(pedidosAte12h.size() > 0) {
-			Pedido aux = pedidosAte12h.remove();
-			sb.append(qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg] " + aux.getCliente() +" status: " + (aux.isFinalizado() ? "Finalizado" : "Não finalizado!"));
-			sb.append("\nQuantidade de pacotes utilizados: " + aux.getPacotes().size());
-			sb.append("\n_____________________________________________\n");
-		}
+		sb.append("\n## " + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\n### Nome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "Não finalizado!"));
+		sb.append("\n### Quantidade de pacotes utilizados: " + p.getPacotes().size());
+		sb.append("\n_____________________________________________\n");	
 		
-		relatorio12h.escrever(sb.toString());
-	} */
+		log12horas.escrever(sb.toString());
+		qtdPedidosFeitosAte12h++;
+	}
 	
 	/**
 	 * Cria o log contendo os pedidos, o cliente e o horário.
@@ -99,7 +155,7 @@ public class App {
 	 */
 	private static void criarLogPedidos(Pedido p) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("\n" + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\nNome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "Não finalizado!"));
+		sb.append("\n## " + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\n### Nome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "Não finalizado!"));
 		sb.append("\nQuantidade de pacotes utilizados: " + p.getPacotes().size());
 		sb.append("\n" + p.toString());
 		sb.append("\n_____________________________________________");
@@ -108,7 +164,7 @@ public class App {
 	
 	private static void criarLogResumidoPedidos(Pedido p) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("\n" + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\nNome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "Não finalizado!"));
+		sb.append("\n## " + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\n### Nome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "Não finalizado!"));
 		sb.append("\nQuantidade de pacotes utilizados: " + p.getPacotes().size());
 		sb.append("\n_____________________________________________");
 		logResumidoPedidos.escrever(sb.toString());	
@@ -134,6 +190,7 @@ public class App {
 
 			for (int j = 0; j < Integer.parseInt(intermediario[1]); j++) {
 				Produto p = new Produto();
+				p.setIndice(j+1);
 				listaProdutos.add(p);
 			}
 
