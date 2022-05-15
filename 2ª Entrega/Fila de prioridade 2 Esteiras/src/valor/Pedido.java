@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import util.MyTimer;
+
 public class Pedido implements Comparable<Pedido> {	
 	private List<Produto> produtos;
 	private String cliente;
@@ -11,7 +13,7 @@ public class Pedido implements Comparable<Pedido> {
 	private int prazoEmpacotamento;
 	private boolean finalizado;
 	private List<Pacote> pacotes;
-	private int chegada;
+	private MyTimer chegada;
 
 	public Pedido(String cliente, int totalDeProdutos, int prazoEmpacotamento, int chegada) {
 		this.produtos = new ArrayList<Produto>();
@@ -100,12 +102,12 @@ public class Pedido implements Comparable<Pedido> {
 	public void setPrazoEmpacotamento(int prazoEmpacotamento) {
 		this.prazoEmpacotamento = prazoEmpacotamento;
 	}
-	public int getChegada() {
+	public MyTimer getChegada() {
 		return chegada;
 	}
 
 	public void setChegada(int chegada) {
-		this.chegada = chegada;
+		this.chegada = MyTimer.fromMinuteToTimer(chegada);
 	}
 	public boolean haPrazo() {
 		if (this.prazoEmpacotamento == 0)

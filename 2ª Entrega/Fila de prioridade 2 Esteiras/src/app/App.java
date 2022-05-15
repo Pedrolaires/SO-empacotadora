@@ -1,6 +1,7 @@
 package app;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,11 +19,14 @@ import valor.Produto;
 
 
 public class App {
+	final static int HRS_INICIO_TURNO = 8;
 	
-	static MyTimer timerEsteira1 = new MyTimer(8,0,0);
-	static MyTimer timerEsteira2 = new MyTimer(8,0,0);
+	
+	static MyTimer timerEsteira1 = new MyTimer(HRS_INICIO_TURNO,0,0);
+	static MyTimer timerEsteira2 = new MyTimer(HRS_INICIO_TURNO,0,0);
 	static double tempoTransicao = 0.5;
 	static double tempoProducaoPacote = 5;
+	static MyTimer proximoPedido;
 	
 	static AtomicInteger tempoMedioPedido = new AtomicInteger(0);
 	static AtomicInteger totalDePacotes = new AtomicInteger(0);
@@ -41,6 +45,11 @@ public class App {
 		Relatorio[] relatorios = {logPedidos, logResumidoPedidos, log12horas,logEsteira1,logEsteira2,relatorioFinal};
 		
 		PriorityBlockingQueue<Pedido> pedidos = new PriorityBlockingQueue<Pedido>();
+//		PriorityBlockingQueue<Pedido> pedidosInesperados = new PriorityBlockingQueue<Pedido>(100,new Comparator<Pedido>() {
+//			public int compare(Pedido p1, Pedido p2) {
+//				return p1.getChegada().compareTo(p2.getChegada());
+//			}
+//		});
 		BracoMecanico bracoMecanico1 = new BracoMecanico();
 		Esteira esteira1 = new Esteira("Esteira 1");
 		
@@ -52,7 +61,7 @@ public class App {
 
 		Thread t1 = new Thread(() ->{
 			try {
-				iniciarProcesso(bracoMecanico1, esteira1, pedidos,relatorios, logEsteira1,timerEsteira1);
+				iniciarProcesso(bracoMecanico1, esteira1, pedidos, relatorios, logEsteira1,timerEsteira1);
 				
 			} catch (InterruptedException e) {
 				System.out.println("Algo deu errado!");
@@ -61,12 +70,13 @@ public class App {
 		
 		Thread t2 = new Thread(() ->{
 			try {
-				iniciarProcesso(bracoMecanico2, esteira2, pedidos,relatorios,logEsteira2,timerEsteira2);
+				iniciarProcesso(bracoMecanico2, esteira2, pedidos, relatorios,logEsteira2,timerEsteira2);
 				
 			} catch (InterruptedException e) {
 				System.out.println("Algo deu errado! 2");
 			}
 		});
+		
 		t1.start();
 		t2.start();
 		
@@ -78,7 +88,7 @@ public class App {
 			if(timerEsteira1.getHora() < timerEsteira2.getMinuto())
 				timer = timerEsteira1;
 			
-			tempoMedioPedido.getAndSet(tempoMedioPedido.get() /qtdPedidosFeitos.get());
+			tempoMedioPedido.getAndSet(tempoMedioPedido.get() / qtdPedidosFeitos.get());
 			relatorioFinal.gerarRelatorioFinal(timer ,tempoMedioPedido.get(), qtdPedidosFeitosAte12h.get());
 		} catch (InterruptedException e) {
 			System.out.println("Algo deu errado! 3");
@@ -102,9 +112,9 @@ public class App {
 		
 		final int volumeComportadoNoPacote = 5000;
 		int qtdProdutos = (int) (volumeComportadoNoPacote  / 250);
-
 		while (!pedidos.isEmpty()) {
-			Pedido p = pedidos.take();
+			
+			Pedido p = pedidos.remove();
 			
 			esteira.setprodutos(p.getProdutos());
 			
@@ -128,16 +138,18 @@ public class App {
 			}
 			lock.lock();
 			tempoMedioPedido.getAndAdd((int) (p.getPacotes().size()*tempoProducaoPacote + p.getPacotes().size()*tempoTransicao));
-			if(timer.getHora() < 12)
+			if(timer.getHora() < 12) {
 				relatorios[2].criarRelatorio12h(timer, p, qtdPedidosFeitos.get());
+				qtdPedidosFeitosAte12h.getAndIncrement();				
+			}
 			
 			relatorios[0].criarLogPedidos(timer, p, esteira.getNome(), qtdPedidosFeitos.get());
 			relatorios[1].criarLogResumidoPedidos(timer, p, esteira.getNome(), qtdPedidosFeitos.get());
 			qtdPedidosFeitos.getAndIncrement();
-			qtdPedidosFeitosAte12h.getAndIncrement();
 			lock.unlock();
 		}
 	}
+	
 	/**
 	 * Transicao entre a remocao do pacote e o despache
 	 * @param braco
@@ -174,8 +186,8 @@ public class App {
 				listaProdutos.add(p);
 			}
 
-			Pedido e = new Pedido(listaProdutos, intermediario[0], listaProdutos.size(), Integer.parseInt(intermediario[3]), Integer.parseInt(intermediario[2]));
-			pedidos.put(e);
+			Pedido e = new Pedido(listaProdutos, intermediario[0], listaProdutos.size(), Integer.parseInt(intermediario[2]), (Integer.parseInt(intermediario[3]) + (HRS_INICIO_TURNO*60) ));
+				pedidos.put(e);
 		}
 		arquivoEntrada.fecharArquivo();
 	}

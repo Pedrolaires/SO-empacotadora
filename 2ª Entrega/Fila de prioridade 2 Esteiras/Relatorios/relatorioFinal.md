@@ -4,4 +4,4 @@
 ____________________________________________________________________________________
 
 Tempo médio na realização de cada pedido: 3min
-Pedidos finalizados até as 12horas: 319
+Pedidos finalizados até as 12horas: 156

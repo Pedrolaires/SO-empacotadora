@@ -83,6 +83,7 @@ public class Relatorio {
 		
 		sb.append("\n## " + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\n### Nome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "N�o finalizado!"));
 		sb.append("\nEquipamento utilizado: " + nomeEquipamento);
+		sb.append("\nPedido realizado " + (p.getChegada().getHora() == 0  && p.getChegada().getMinuto() == 0 ? "Antecipadamente" : " as "+ p.getChegada().getHora() + "h"));		
 		sb.append("\nQuantidade de pacotes utilizados: " + p.getPacotes().size());
 		sb.append("\n" + p.toString());
 		sb.append("\n_____________________________________________");
@@ -98,6 +99,7 @@ public class Relatorio {
 		StringBuilder sb = new StringBuilder();
 		sb.append("\n## " + qtdPedidosFeitos + " - ["+ timer.getHora() + "h, " + timer.getMinuto() + "min, "+ timer.getSegundo() + "seg]\n### Nome: " + p.getCliente() +", status: " + (p.isFinalizado() ? "Finalizado" : "N�o finalizado!"));
 		sb.append("\nEquipamento utilizado: " + nomeEquipamento);
+		sb.append("\nPedido realizado " + (p.getChegada().getHora() == 0  && p.getChegada().getMinuto() == 0 ? "Antecipadamente" : " as "+ p.getChegada().getHora() + "h"));
 		sb.append("\nQuantidade de pacotes utilizados: " + p.getPacotes().size());
 		sb.append("\n_____________________________________________");
 		
